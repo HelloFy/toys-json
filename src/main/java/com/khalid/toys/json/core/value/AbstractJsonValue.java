@@ -4,7 +4,7 @@ import com.khalid.toys.json.core.type.JsonType;
 
 
 /**
- * Json解析值基类 共享字段jsonType
+ * Json解析值基类 
  * @author 费玥
  * @since 2016.09.21
  * */
