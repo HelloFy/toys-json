@@ -15,7 +15,7 @@ public class ParseValueTest
 	@Test
     public void testParseNullValue(){
     	try {
-			Assert.assertEquals("value:null",new SimpleParser<NullValue>().parse("  null").toString());
+			Assert.assertEquals("value:null",new SimpleParser<NullValue>().parse("  null4").toString());
 		} catch (ParseRootNotSingularException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

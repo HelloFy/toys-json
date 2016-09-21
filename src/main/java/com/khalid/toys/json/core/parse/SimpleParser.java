@@ -128,7 +128,8 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 		if(jsonContext.getIndex() < (jsonContext.getJsonCharArray().length-1)){
 			jsonContext.setIndex(jsonContext.getIndex()+1);
 			parseWhiteSpace(jsonContext);
-			if(jsonContext.getIndex() != (jsonContext.getJsonCharArray().length-1))
+			char curChar = jsonContext.getJsonCharValueAtIndex(jsonContext.getIndex());
+			if(curChar != ' ' || curChar != '\t' || curChar != '\n' || curChar != '\r')
 				throw new ParseRootNotSingularException("Json格式错误！");
 		}
 		return v;
