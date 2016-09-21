@@ -6,12 +6,25 @@ import com.khalid.toys.json.core.exception.ParseRootNotSingularException;
 import com.khalid.toys.json.core.value.AbstractJsonValue;
 import com.khalid.toys.json.core.value.BooleanValue;
 import com.khalid.toys.json.core.value.NullValue;
+import com.khalid.toys.json.core.value.NumberValue;
 
 public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 	
 	private boolean checkIndexIfOut(int index,char[] array){
 		return (index < array.length ) ? false : true;
 	}
+	
+	private JsonContext validateForLiteral(JsonContext jsonContext,char[] literal) throws ParseExpectValueException{
+		int index = jsonContext.getIndex();
+		for(int i=0;i<literal.length;i++){
+			if(jsonContext.getJsonCharValueAtIndex(index+i) != literal[i]){
+				throw new ParseExpectValueException("解析失败，期望值与实际值不符");
+			}
+		}
+		jsonContext.setIndex(index+literal.length-1);
+		return jsonContext;
+	}
+	
 
 	public JsonContext parseWhiteSpace(JsonContext jsonContext){
 		int index = jsonContext.getIndex();
@@ -25,7 +38,6 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 		return jsonContext;
 	}
 	
-
 	public NullValue parseNull(NullValue value,JsonContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		if(jsonContext.getJsonCharValueAtIndex(index) != 'n')
@@ -33,12 +45,14 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 		if(checkIndexIfOut(index+3, jsonContext.getJsonCharArray())){
 			throw new ParseExpectValueException("解析NULL失败,NULL值长度不够");
 		}
-		if(jsonContext.getJsonCharValueAtIndex(index+1) != 'u' || jsonContext.getJsonCharValueAtIndex(index+2) != 'l'|| jsonContext.getJsonCharValueAtIndex(index+3) != 'l'){
-			throw new ParseExpectValueException("解析NULL失败,NULL值必须是null形式!");
+		char[] literal = new char[]{'n','u','l','l'};
+		try{
+			validateForLiteral(jsonContext,literal);
 		}
-		
+		catch(ParseExpectValueException e){
+			throw new ParseExpectValueException("解析NULL失败,NULL值应为null",e);
+		}
 		value.setValue("null");
-		jsonContext.setIndex(index+3);
 		return value;
 	}
 	
@@ -50,12 +64,14 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 		if(checkIndexIfOut(index+3, jsonContext.getJsonCharArray())){
 			throw new ParseExpectValueException("解析Boolean.TRUE失败,TRUE值长度不够");
 		}
-		if(jsonContext.getJsonCharValueAtIndex(index+1) != 'r' || jsonContext.getJsonCharValueAtIndex(index+2) != 'u'|| jsonContext.getJsonCharValueAtIndex(index+3) != 'e'){
-			throw new ParseExpectValueException("解析Boolean.TRUE失败,TRUE值必须是true形式!");
+		char[] literal = new char[]{'t','r','u','e'};
+		try{
+			validateForLiteral(jsonContext,literal);
 		}
-		
+		catch(ParseExpectValueException e){
+			throw new ParseExpectValueException("解析Boolean.TRUE失败,TRUE值应为true",e);
+		}
 		value.setValue(true);
-		jsonContext.setIndex(index+3);
 		return value;
 	}
 	
@@ -67,15 +83,24 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 		if(checkIndexIfOut(index+4, jsonContext.getJsonCharArray())){
 			throw new ParseExpectValueException("解析Boolean.FALSE失败,FALSE值长度不够");
 		}
-		if(jsonContext.getJsonCharValueAtIndex(index+1) != 'a' || jsonContext.getJsonCharValueAtIndex(index+2) != 'l'
-				|| jsonContext.getJsonCharValueAtIndex(index+3) != 's' || jsonContext.getJsonCharValueAtIndex(index+4) != 'e'){
-			throw new ParseExpectValueException("解析Boolean.FALSE失败,FALSE值必须是false形式!");
+		char[] literal = new char[]{'f','a','l','s','e'};
+		try{
+			validateForLiteral(jsonContext,literal);
 		}
-		
+		catch(ParseExpectValueException e){
+			throw new ParseExpectValueException("解析Boolean.FALSE失败,FALSE值应为false",e);
+		}
 		value.setValue(false);
-		jsonContext.setIndex(index+4);
 		return value;
 	} 
+	
+	
+	public NumberValue parseNumber(Number value , JsonContext jsonContext){
+		int index = jsonContext.getIndex();
+		
+		return null;
+	
+	}
 
 
 	@SuppressWarnings("unchecked")
