@@ -7,7 +7,7 @@ package com.khalid.toys.json.core.type;
  * */
 public enum JsonType{
 	
-	TYPE_NULL("null"),TYPE_FALSE("false"),TYPE_TRUE("true"),TYPE_NUMBER("number"),
+	TYPE_NULL("null"),TYPE_BOOLEAN("boolean"),TYPE_NUMBER("number"),
 	TYPE_STRING("string"),TYPE_ARRAY("array"),TYPE_OBJECT("object");
 	
 	private String typeName;
