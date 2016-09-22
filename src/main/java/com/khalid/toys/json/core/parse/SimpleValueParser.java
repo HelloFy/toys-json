@@ -8,7 +8,7 @@ import com.khalid.toys.json.core.value.BooleanValue;
 import com.khalid.toys.json.core.value.NullValue;
 import com.khalid.toys.json.core.value.NumberValue;
 
-public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
+public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueParse<T> {
 	
 	private boolean checkIndexIfOut(int index,char[] array){
 		return (index < array.length ) ? false : true;
@@ -23,6 +23,10 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 		}
 		jsonContext.setIndex(index+literal.length-1);
 		return jsonContext;
+	}
+	
+	private boolean isNumber1To9(char ch){
+		return ('1'<=ch && ch<='9')? true : false;
 	}
 	
 
@@ -95,10 +99,96 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 	} 
 	
 	
-	public NumberValue parseNumber(Number value , JsonContext jsonContext){
+	public NumberValue parseNumber(NumberValue value , JsonContext jsonContext) throws ParseInvalidValueException{
 		int index = jsonContext.getIndex();
+		final char[] array = jsonContext.getJsonCharArray();
+		StringBuilder numberStr = new StringBuilder();
+		/*
+		 * 是否是负数
+		  */
+		if(jsonContext.getJsonCharValueAtIndex(index) == '-'){
+			numberStr.append(jsonContext.getJsonCharValueAtIndex(index));
+			if(!checkIndexIfOut(++index, array))
+				jsonContext.setIndex(index);
+		}
+		/*
+		 * 整数以及0
+		 * */
+		if(jsonContext.getJsonCharValueAtIndex(index) == '0'){
+			numberStr.append(jsonContext.getJsonCharValueAtIndex(index));
+			if(!checkIndexIfOut(++index, array)){
+				jsonContext.setIndex(index);
+			}
+		}
+		else{
+			if(!isNumber1To9(jsonContext.getJsonCharValueAtIndex(index))){
+				throw new ParseInvalidValueException("数字不合法");
+			}
+			while(Character.isDigit(jsonContext.getJsonCharValueAtIndex(index))){
+				numberStr.append(jsonContext.getJsonCharValueAtIndex(index));
+				if(!checkIndexIfOut(index+1, array)){
+					jsonContext.setIndex(++index);
+				}
+				else break;
+			}
+		}
+		/*
+		 * 小数
+		 * */
+		if(jsonContext.getJsonCharValueAtIndex(index) == '.'){
+			if(checkIndexIfOut(index+1, array)){
+				throw new ParseInvalidValueException("数字不合法");
+			}
+			numberStr.append(jsonContext.getJsonCharValueAtIndex(index));
+			jsonContext.setIndex(++index);
+			if(!Character.isDigit(jsonContext.getJsonCharValueAtIndex(index))){
+				throw new ParseInvalidValueException("数字不合法");
+			}
+			while(Character.isDigit(jsonContext.getJsonCharValueAtIndex(index))){
+				numberStr.append(jsonContext.getJsonCharValueAtIndex(index));
+				if(!checkIndexIfOut(index+1, array)){
+					jsonContext.setIndex(++index);
+				}
+				else break;
+			}
+		}
 		
-		return null;
+		/*
+		 * 科学计数法
+		 * */
+		if(jsonContext.getJsonCharValueAtIndex(index) == 'e' ||jsonContext.getJsonCharValueAtIndex(index) == 'E'){
+			if(checkIndexIfOut(index+1, array)){
+				throw new ParseInvalidValueException("数字不合法");
+			}
+			numberStr.append(jsonContext.getJsonCharValueAtIndex(index));
+			jsonContext.setIndex(++index);
+			if(jsonContext.getJsonCharValueAtIndex(index) == '+' || jsonContext.getJsonCharValueAtIndex(index) == '-'){
+				numberStr.append(jsonContext.getJsonCharValueAtIndex(index));
+				if(checkIndexIfOut(index+1, array)){
+					throw new ParseInvalidValueException("数字不合法");
+				}
+				jsonContext.setIndex(++index);
+			}
+			if(!Character.isDigit(jsonContext.getJsonCharValueAtIndex(index))){
+				throw new ParseInvalidValueException("数字不合法");
+			}
+			while(Character.isDigit(jsonContext.getJsonCharValueAtIndex(index))){
+				numberStr.append(jsonContext.getJsonCharValueAtIndex(index));
+				if(!checkIndexIfOut(index+1, array)){
+					jsonContext.setIndex(++index);
+				}
+				else break;
+			}
+			
+		}
+		try{
+			value.setValue(Double.valueOf(numberStr.toString()));
+		}
+		catch(Exception e){
+			throw new ParseInvalidValueException("数字越界", e);
+		}
+		
+		return value;
 	
 	}
 
@@ -115,13 +205,16 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 			case 'f':
 				return (T) parseFalse(new BooleanValue(),jsonContext);
 			default :
-				throw new ParseInvalidValueException("Json格式错误");
+				return (T) parseNumber(new NumberValue(), jsonContext);
 		}
 	}
 
 
 	public Object parse(String jsonStr) throws ParseRootNotSingularException, ParseExpectValueException, ParseInvalidValueException {
 		// TODO Auto-generated method stub
+		if(jsonStr == null || jsonStr.isEmpty()){
+			throw new ParseRootNotSingularException("Json串空");
+		}
 		JsonContext jsonContext = new JsonContext(jsonStr);
 		parseWhiteSpace(jsonContext);
 		AbstractJsonValue<?> v = parseValue(jsonContext);
@@ -129,7 +222,7 @@ public class SimpleParser<T extends AbstractJsonValue<?>> implements Parse<T> {
 			jsonContext.setIndex(jsonContext.getIndex()+1);
 			parseWhiteSpace(jsonContext);
 			char curChar = jsonContext.getJsonCharValueAtIndex(jsonContext.getIndex());
-			if(curChar != ' ' || curChar != '\t' || curChar != '\n' || curChar != '\r')
+			if(curChar != ' ' && curChar != '\t' && curChar != '\n' && curChar != '\r')
 				throw new ParseRootNotSingularException("Json格式错误！");
 		}
 		return v;
