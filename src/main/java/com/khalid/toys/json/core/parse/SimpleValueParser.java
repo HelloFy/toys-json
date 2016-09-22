@@ -7,6 +7,7 @@ import com.khalid.toys.json.core.value.AbstractJsonValue;
 import com.khalid.toys.json.core.value.BooleanValue;
 import com.khalid.toys.json.core.value.NullValue;
 import com.khalid.toys.json.core.value.NumberValue;
+import com.khalid.toys.json.core.value.StringValue;
 
 public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueParse<T> {
 	
@@ -191,6 +192,12 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		return value;
 	
 	}
+	
+	public StringValue parseString(StringValue value , JsonContext jsonContext){
+		StringBuilder stringValue = new StringBuilder();
+		
+		return value;
+	}
 
 
 	@SuppressWarnings("unchecked")
@@ -204,6 +211,8 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 				return (T) parseTrue(new BooleanValue(),jsonContext);
 			case 'f':
 				return (T) parseFalse(new BooleanValue(),jsonContext);
+			case '"':
+				return (T) parseString(new StringValue(),jsonContext);
 			default :
 				return (T) parseNumber(new NumberValue(), jsonContext);
 		}
