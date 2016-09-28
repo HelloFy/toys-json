@@ -301,18 +301,32 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			char curChar = jsonContext.getJsonCharValueAtIndex(index);
 			switch (curChar) {
 				case ':':
-				case ',':
 					if(checkIndexIfOut(index+1, array)){
-						throw new ParseExpectValueException("解析Array出错,应以]结尾");
+						throw new ParseExpectValueException("解析Object失败，应以}结尾。");
 					}
-					else if(jsonContext.getJsonCharValueAtIndex(index+1) == ']'){
-						throw new ParseExpectValueException("解析Array出错, ,后必须存在值.");
-					}
-					else{
-						valueMap.put(nameTmp.toString(),parse(valueTmp.toString()));//解析之前缓存的值
-						nameTmp.delete(0, nameTmp.length());
-						valueTmp.delete(0,valueTmp.length());
+					jsonContext.setIndex(++index);
+					jsonContext = parseWhiteSpace(jsonContext);
+					while(true){
+						char valChar = jsonContext.getJsonCharValueAtIndex(index);
+						if(valChar == ',' ){
+							valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
+							nameTmp.delete(0, nameTmp.length());
+							valueTmp.delete(0, valueTmp.length());
+							if(checkIndexIfOut(index+1, array))
+								throw new ParseExpectValueException("解析Json失败.");
+							break;
 						}
+						else if(valChar == '}'){
+							valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
+							value.setValue(valueMap);
+							return value;
+						}
+						valueTmp.append(valChar);
+						if(checkIndexIfOut(index+1, array))
+							throw new ParseExpectValueException("解析Json失败.");
+						jsonContext.setIndex(++index);
+							
+					}
 					break;
 				case '}':
 					valueMap.put(nameTmp.toString(),parse(valueTmp.toString()));//解析之前缓存的值
