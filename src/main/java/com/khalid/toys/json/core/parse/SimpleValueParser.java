@@ -3,7 +3,6 @@ package com.khalid.toys.json.core.parse;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.khalid.toys.json.core.exception.JsonParseException;
 import com.khalid.toys.json.core.exception.JsonParseValueException;
 import com.khalid.toys.json.core.exception.ParseExpectValueException;
 import com.khalid.toys.json.core.exception.ParseInvalidValueException;

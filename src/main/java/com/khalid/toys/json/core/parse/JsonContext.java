@@ -1,7 +1,5 @@
 package com.khalid.toys.json.core.parse;
 
-import java.util.List;
-
 import org.junit.Assert;
 
 public class JsonContext {
