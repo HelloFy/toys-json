@@ -147,7 +147,7 @@ public class ParseValueTest
     	String jsonStr ="{\"value\":\"12\2E11\",\"js\":true}";
     	JSONObject jsonObject = new JSONObject();
     	Object object = jsonObject.parse(jsonStr);
-    	TestParseObject object2 = (TestParseObject) jsonObject.parseObject(jsonStr,TestParseObject.class);
+//    	TestParseObject object2 = (TestParseObject) jsonObject.parseObject(jsonStr,TestParseObject.class);
 //    	double value = Double.valueOf(s);
     	if(c==92){
     		return;
