@@ -10,6 +10,7 @@ import com.khalid.toys.json.core.exception.ParseInvalidValueException;
 import com.khalid.toys.json.core.exception.ParseNumberTooHugeExcpetion;
 import com.khalid.toys.json.core.exception.ParseRootNotSingularException;
 import com.khalid.toys.json.core.parse.SimpleValueParser;
+import com.khalid.toys.json.core.value.ArrayValue;
 import com.khalid.toys.json.core.value.BooleanValue;
 import com.khalid.toys.json.core.value.NullValue;
 import com.khalid.toys.json.core.value.NumberValue;
@@ -126,7 +127,7 @@ public class ParseValueTest
 		}
 
 		try {
-			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\tt\"\"\"\"\"22"));
+			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\tt\"\"\"\"\""));
 		} catch (JsonParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -152,6 +153,17 @@ public class ParseValueTest
     		return;
     	}
     	System.out.println((char)92);
+    }
+    
+    @Test
+    public void testParseArray(){
+    	String s="[\"123123\",1.1,123]";
+    	try {
+			System.out.println(new SimpleValueParser<ArrayValue>().parse(s));
+		} catch (JsonParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
     

@@ -1,5 +1,8 @@
 package com.khalid.toys.json.core.parse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.khalid.toys.json.core.exception.JsonParseException;
 import com.khalid.toys.json.core.exception.JsonParseValueException;
 import com.khalid.toys.json.core.exception.ParseExpectValueException;
@@ -8,9 +11,11 @@ import com.khalid.toys.json.core.exception.ParseNumberTooHugeExcpetion;
 import com.khalid.toys.json.core.exception.ParseRootNotSingularException;
 import com.khalid.toys.json.core.exception.ParseStringInvalidEscapeException;
 import com.khalid.toys.json.core.value.AbstractJsonValue;
+import com.khalid.toys.json.core.value.ArrayValue;
 import com.khalid.toys.json.core.value.BooleanValue;
 import com.khalid.toys.json.core.value.NullValue;
 import com.khalid.toys.json.core.value.NumberValue;
+import com.khalid.toys.json.core.value.ObjectValue;
 import com.khalid.toys.json.core.value.StringValue;
 
 public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueParse<T> {
@@ -210,11 +215,11 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		while(true){
 			curChar = jsonContext.getJsonCharValueAtIndex(index);
 			if(curChar == '\"'){
-				stringValue.append(curChar);
 				if(checkIndexIfOut(index+1, array)){
 					value.setValue(stringValue.toString());
 					return value;
 				}
+				stringValue.append(curChar);
 			}
 			if((int)curChar < 0x20){
 				switch(curChar){
@@ -241,6 +246,49 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		value.setValue(stringValue.toString());
 		return value;
 	}
+	
+	public ArrayValue parseArray(ArrayValue value,JsonContext jsonContext) throws JsonParseValueException{
+		List<? super AbstractJsonValue<?>> list =new ArrayList<>();
+		int index = jsonContext.getIndex();
+		char[] array = jsonContext.getJsonCharArray();
+		if(checkIndexIfOut(index+1, array)){
+			throw new ParseExpectValueException("解析Array失败，应以]结尾。");
+		}
+		jsonContext.setIndex(++index);
+		StringBuilder valueTmp = new StringBuilder(); 
+		while(true){
+			char curChar = jsonContext.getJsonCharValueAtIndex(index);
+			switch (curChar) {
+				case ',':
+					if(checkIndexIfOut(index+1, array)){
+						throw new ParseExpectValueException("解析Array出错,应以]结尾");
+					}
+					else if(jsonContext.getJsonCharValueAtIndex(index+1) == ']'){
+						throw new ParseExpectValueException("解析Array出错, ,后必须存在值.");
+					}
+					else{
+						list.add(parse(valueTmp.toString()));//解析之前缓存的值
+						valueTmp.delete(0,valueTmp.length());
+						}
+					break;
+				case ']':
+					list.add(parse(valueTmp.toString()));//解析之前缓存的值
+					value.setValue(list);
+					return value;
+				default:
+					valueTmp.append(curChar);
+					break;
+					
+			}
+			if(checkIndexIfOut(index+1, array))
+				throw new ParseExpectValueException("解析数组失败.");
+			jsonContext.setIndex(++index);
+		}
+	}
+	
+	public ObjectValue parseObject(ObjectValue value , JsonContext jsonContext){
+		return value;		
+	}
 
 
 	@SuppressWarnings("unchecked")
@@ -255,15 +303,20 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 				return (T) parseTrue(new BooleanValue(),jsonContext);
 			case 'f':
 				return (T) parseFalse(new BooleanValue(),jsonContext);
-			case '"':
+			case '\"':
 				return (T) parseString(new StringValue(),jsonContext);
+			case '[':
+				return (T) parseArray(new ArrayValue(),jsonContext);
+			case '{':
+				return (T) parseArray(new ArrayValue(),jsonContext);
 			default :
 				return (T) parseNumber(new NumberValue(), jsonContext);
 		}
 	}
 
 
-	public Object parse(String jsonStr) throws JsonParseException {
+	@SuppressWarnings("unchecked")
+	public T parse(String jsonStr) throws JsonParseValueException {
 		// TODO Auto-generated method stub
 		if(jsonStr == null || jsonStr.isEmpty()){
 			throw new ParseRootNotSingularException("Json串空");
@@ -278,7 +331,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			if(curChar != ' ' && curChar != '\t' && curChar != '\n' && curChar != '\r')
 				throw new ParseRootNotSingularException("Json格式错误！");
 		}
-		return v;
+		return (T) v;
 	}
 
 	
