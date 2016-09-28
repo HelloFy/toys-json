@@ -1,6 +1,6 @@
 package com.khalid.toys.json.core.exception;
 
-public class ParseExpectValueException extends JsonParseException implements ErrorCode{
+public class ParseExpectValueException extends JsonParseValueException{
 
 	/**
 	 * 

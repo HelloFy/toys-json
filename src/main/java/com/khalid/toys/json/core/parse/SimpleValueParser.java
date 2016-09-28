@@ -1,9 +1,12 @@
 package com.khalid.toys.json.core.parse;
 
+import com.khalid.toys.json.core.exception.JsonParseException;
+import com.khalid.toys.json.core.exception.JsonParseValueException;
 import com.khalid.toys.json.core.exception.ParseExpectValueException;
 import com.khalid.toys.json.core.exception.ParseInvalidValueException;
 import com.khalid.toys.json.core.exception.ParseNumberTooHugeExcpetion;
 import com.khalid.toys.json.core.exception.ParseRootNotSingularException;
+import com.khalid.toys.json.core.exception.ParseStringInvalidEscapeException;
 import com.khalid.toys.json.core.value.AbstractJsonValue;
 import com.khalid.toys.json.core.value.BooleanValue;
 import com.khalid.toys.json.core.value.NullValue;
@@ -192,7 +195,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 	
 	}
 	
-	public StringValue parseString(StringValue value , JsonContext jsonContext) throws ParseRootNotSingularException, ParseExpectValueException{
+	public StringValue parseString(StringValue value , JsonContext jsonContext) throws ParseRootNotSingularException, ParseExpectValueException, ParseStringInvalidEscapeException{
 		StringBuilder stringValue = new StringBuilder();
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
@@ -204,11 +207,36 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			throw new ParseRootNotSingularException("解析字符串失败，格式错误");
 		}
 		jsonContext.setIndex(++index);
-		while((curChar = jsonContext.getJsonCharValueAtIndex(index))!='\"'){
-			if(checkIndexIfOut(index+1, array))
-				throw new ParseRootNotSingularException("解析字符串失败，格式错误");
-			jsonContext.setIndex(++index);
+		while(true){
+			curChar = jsonContext.getJsonCharValueAtIndex(index);
+			if(curChar == '\"'){
+				stringValue.append(curChar);
+				if(checkIndexIfOut(index+1, array)){
+					value.setValue(stringValue.toString());
+					return value;
+				}
+			}
+			if((int)curChar < 0x20){
+				switch(curChar){
+					case '\\': 
+					case '/':  
+					case '\b':
+					case '\f':
+					case '\n': 
+					case '\r': 
+					case '\t': break;
+					default:
+						throw new ParseStringInvalidEscapeException("解析String失败，转义字符非法");
+				}
+			}
 			stringValue.append(curChar);
+			if(checkIndexIfOut(index+1, array)){
+				break;
+			}
+			jsonContext.setIndex(++index);		
+		}
+		if(curChar!='\n'){
+			throw new ParseExpectValueException("解析String失败,必须以\"结尾");
 		}
 		value.setValue(stringValue.toString());
 		return value;
@@ -216,7 +244,8 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 
 
 	@SuppressWarnings("unchecked")
-	public T parseValue(JsonContext jsonContext) throws ParseExpectValueException, ParseInvalidValueException, ParseNumberTooHugeExcpetion, ParseRootNotSingularException {
+	@Override
+	public T parseValue(JsonContext jsonContext) throws JsonParseValueException{
 		// TODO Auto-generated method stub
 		int index = jsonContext.getIndex();
 		switch(jsonContext.getJsonCharValueAtIndex(index)){
@@ -234,7 +263,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 	}
 
 
-	public Object parse(String jsonStr) throws ParseRootNotSingularException, ParseExpectValueException, ParseInvalidValueException, ParseNumberTooHugeExcpetion {
+	public Object parse(String jsonStr) throws JsonParseException {
 		// TODO Auto-generated method stub
 		if(jsonStr == null || jsonStr.isEmpty()){
 			throw new ParseRootNotSingularException("Json串空");

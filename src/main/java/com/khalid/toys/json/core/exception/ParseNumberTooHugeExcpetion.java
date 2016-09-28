@@ -1,6 +1,6 @@
 package com.khalid.toys.json.core.exception;
 
-public class ParseNumberTooHugeExcpetion extends JsonParseException implements ErrorCode {
+public class ParseNumberTooHugeExcpetion extends JsonParseValueException{
 
 	/**
 	 * 
