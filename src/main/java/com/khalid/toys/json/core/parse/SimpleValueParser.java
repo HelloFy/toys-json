@@ -1,7 +1,9 @@
 package com.khalid.toys.json.core.parse;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.khalid.toys.json.core.exception.JsonParseValueException;
 import com.khalid.toys.json.core.exception.ParseExpectValueException;
@@ -285,8 +287,60 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		}
 	}
 	
-	public ObjectValue parseObject(ObjectValue value , JsonContext jsonContext){
-		return value;		
+	public ObjectValue parseObject(ObjectValue value , JsonContext jsonContext) throws JsonParseValueException{
+		Map<String,? super AbstractJsonValue<?>> valueMap = new HashMap<>();
+		int index = jsonContext.getIndex();
+		char[] array = jsonContext.getJsonCharArray();
+		if(checkIndexIfOut(index+1, array)){
+			throw new ParseExpectValueException("解析Object失败，应以}结尾。");
+		}
+		jsonContext.setIndex(++index);
+		StringBuilder nameTmp = new StringBuilder();
+		StringBuilder valueTmp = new StringBuilder();
+		while(true){
+			char curChar = jsonContext.getJsonCharValueAtIndex(index);
+			switch (curChar) {
+				case ':':
+					if(checkIndexIfOut(index+1, array)){
+						throw new ParseExpectValueException("解析Object失败，应以}结尾。");
+					}
+					jsonContext.setIndex(++index);
+					jsonContext = parseWhiteSpace(jsonContext);
+					while(true){
+						char valChar = jsonContext.getJsonCharValueAtIndex(index);
+						if(valChar == ',' ){
+							valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
+							nameTmp.delete(0, nameTmp.length());
+							valueTmp.delete(0, valueTmp.length());
+							if(checkIndexIfOut(index+1, array))
+								throw new ParseExpectValueException("解析Json失败.");
+							break;
+						}
+						else if(valChar == '}'){
+							valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
+							value.setValue(valueMap);
+							return value;
+						}
+						valueTmp.append(valChar);
+						if(checkIndexIfOut(index+1, array))
+							throw new ParseExpectValueException("解析Json失败.");
+						jsonContext.setIndex(++index);
+							
+					}
+					break;
+				case '}':
+					valueMap.put(nameTmp.toString(),parse(valueTmp.toString()));//解析之前缓存的值
+					value.setValue(valueMap);
+					return value;
+				default:
+					nameTmp.append(curChar);
+					break;
+					
+			}
+			if(checkIndexIfOut(index+1, array))
+				throw new ParseExpectValueException("解析数组失败.");
+			jsonContext.setIndex(++index);
+		}
 	}
 
 
@@ -307,7 +361,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			case '[':
 				return (T) parseArray(new ArrayValue(),jsonContext);
 			case '{':
-				return (T) parseArray(new ArrayValue(),jsonContext);
+				return (T) parseObject(new ObjectValue(),jsonContext);
 			default :
 				return (T) parseNumber(new NumberValue(), jsonContext);
 		}
