@@ -20,4 +20,9 @@ public enum JsonType{
 		return typeName;
 	}
 	
+	@Override
+	public String toString(){
+		return typeName;
+	}
+	
 }

@@ -291,7 +291,8 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 						if(checkIndexIfOut(index+1, array)){
 							throw new ParseExpectValueException("解析Array出错,应以]结尾");
 						}
-						else if(stringVal == '"'){
+						else if(stringVal == '"' //防止转义字符
+											&& jsonContext.getJsonCharValueAtIndex(index-1) != '\\'){
 							valueTmp.append(stringVal);
 							list.add(parse(valueTmp.toString()));
 							valueTmp.delete(0, valueTmp.length());
@@ -304,8 +305,10 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 							isBlankPre =true;
 							break;
 						}
-						valueTmp.append(stringVal);
-						jsonContext.setIndex(++index);	
+						else{
+							valueTmp.append(stringVal);
+							jsonContext.setIndex(++index);
+						}	
 					}
 					break;
 				case ',':
@@ -352,6 +355,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		while(true){
 			char curChar = jsonContext.getJsonCharValueAtIndex(index);
 			switch (curChar) {
+				case '"':
 				case ':':
 					if(checkIndexIfOut(index+1, array)){
 						throw new ParseExpectValueException("解析Object失败，应以}结尾。");

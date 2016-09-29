@@ -32,7 +32,7 @@ public abstract class AbstractJsonValue<T> implements Value<T> {
 	
 	@Override 
 	public String toString(){
-		return "value:"+value;	
+		return jsonType+"Value:"+value;	
 	}
 	
 }
