@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import com.alibaba.fastjson.JSONObject;
 import com.khalid.toys.json.core.exception.JsonParseException;
+import com.khalid.toys.json.core.exception.JsonParseValueException;
 import com.khalid.toys.json.core.exception.ParseExpectValueException;
 import com.khalid.toys.json.core.exception.ParseInvalidValueException;
 import com.khalid.toys.json.core.exception.ParseNumberTooHugeExcpetion;
@@ -14,6 +15,7 @@ import com.khalid.toys.json.core.value.ArrayValue;
 import com.khalid.toys.json.core.value.BooleanValue;
 import com.khalid.toys.json.core.value.NullValue;
 import com.khalid.toys.json.core.value.NumberValue;
+import com.khalid.toys.json.core.value.ObjectValue;
 import com.khalid.toys.json.core.value.StringValue;
 
 public class ParseValueTest 
@@ -147,7 +149,7 @@ public class ParseValueTest
     	String jsonStr ="{\"value\":\"12\2E11\",\"js\":true}";
     	JSONObject jsonObject = new JSONObject();
     	Object object = jsonObject.parse(jsonStr);
-    	TestParseObject object2 = (TestParseObject) jsonObject.parseObject(jsonStr,TestParseObject.class);
+//    	TestParseObject object2 = (TestParseObject) jsonObject.parseObject(jsonStr,TestParseObject.class);
 //    	double value = Double.valueOf(s);
     	if(c==92){
     		return;
@@ -164,6 +166,18 @@ public class ParseValueTest
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    }
+    
+    @Test
+    public void testParseObject(){
+    	String s = "{\"name\":\"feiyeu\",\"value\":123}";
+		try {
+			System.out.println(new SimpleValueParser<ObjectValue>().parse(s));
+		} catch (JsonParseValueException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
     }
     
     
