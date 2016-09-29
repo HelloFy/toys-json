@@ -206,7 +206,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
 		char curChar = jsonContext.getJsonCharValueAtIndex(index);
-		if(curChar != '\"'){
+		if(curChar != '"'){
 			throw new ParseExpectValueException("解析字符串失败，字符串应以\"开头");
 		}
 		if(checkIndexIfOut(index+1, array)){
@@ -215,14 +215,34 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		jsonContext.setIndex(++index);
 		while(true){
 			curChar = jsonContext.getJsonCharValueAtIndex(index);
-			if(curChar == '\"'){
+			if(curChar == '"'){
 				if(checkIndexIfOut(index+1, array)){
 					value.setValue(stringValue.toString());
 					return value;
 				}
 				stringValue.append(curChar);
 			}
-			if((int)curChar < 0x20){
+			else if(curChar == '\\'){
+				if(checkIndexIfOut(index+1, array)){
+					throw new ParseStringInvalidEscapeException("转义无效。");
+				}
+				jsonContext.setIndex(++index);
+				curChar = jsonContext.getJsonCharValueAtIndex(index);
+				switch(curChar){
+					case '\\': stringValue.append('\\');break;
+					case '/':  stringValue.append('/');break;
+					case '\'': stringValue.append('\'');break;
+					case '\"': stringValue.append('\"');break;
+					case 'b': stringValue.append('\b');break;
+					case 'f': stringValue.append('\f');break;
+					case 'n': stringValue.append('\n');break;
+					case 'r': stringValue.append('\r');break;
+					case 't': stringValue.append('\t');break;
+					default:
+						throw new ParseStringInvalidEscapeException("解析String失败，转义字符非法");
+				}
+			}
+			else if((int)curChar < 0x20){
 				switch(curChar){
 					case '\\': 
 					case '/':  
@@ -230,22 +250,21 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 					case '\f':
 					case '\n': 
 					case '\r': 
-					case '\t': break;
+					case '\t': 
+					case '(':
+					case ')': break;
 					default:
-						throw new ParseStringInvalidEscapeException("解析String失败，转义字符非法");
+						throw new ParseStringInvalidEscapeException("解析String失败.字符非法");
 				}
 			}
-			stringValue.append(curChar);
+			else{
+				stringValue.append(curChar);
+			}
 			if(checkIndexIfOut(index+1, array)){
-				break;
+				throw new ParseExpectValueException("解析String失败,必须以\"结尾");
 			}
 			jsonContext.setIndex(++index);		
 		}
-		if(curChar!='\n'){
-			throw new ParseExpectValueException("解析String失败,必须以\"结尾");
-		}
-		value.setValue(stringValue.toString());
-		return value;
 	}
 	
 	public ArrayValue parseArray(ArrayValue value,JsonContext jsonContext) throws JsonParseValueException{
@@ -257,20 +276,53 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		}
 		jsonContext.setIndex(++index);
 		StringBuilder valueTmp = new StringBuilder(); 
+		boolean isBlankPre = false;
 		while(true){
 			char curChar = jsonContext.getJsonCharValueAtIndex(index);
 			switch (curChar) {
-				case ',':
+				case '"'://对String类型单独处理
+					valueTmp.append(curChar);
 					if(checkIndexIfOut(index+1, array)){
 						throw new ParseExpectValueException("解析Array出错,应以]结尾");
 					}
+					jsonContext.setIndex(++index);
+					while(true){
+						char stringVal = jsonContext.getJsonCharValueAtIndex(index);
+						if(checkIndexIfOut(index+1, array)){
+							throw new ParseExpectValueException("解析Array出错,应以]结尾");
+						}
+						else if(stringVal == '"'){
+							valueTmp.append(stringVal);
+							list.add(parse(valueTmp.toString()));
+							valueTmp.delete(0, valueTmp.length());
+							if(checkIndexIfOut(index+2, array)){
+								throw new ParseExpectValueException("解析Array出错,应以]结尾");
+							}
+							jsonContext.setIndex(++index);
+							parseWhiteSpace(jsonContext);
+							index = jsonContext.getIndex()-1;
+							isBlankPre =true;
+							break;
+						}
+						valueTmp.append(stringVal);
+						jsonContext.setIndex(++index);	
+					}
+					break;
+				case ',':
+					if(checkIndexIfOut(index+1, array)){
+						throw new ParseExpectValueException("解析Array出错, ','后必须存在值.");
+					}
 					else if(jsonContext.getJsonCharValueAtIndex(index+1) == ']'){
-						throw new ParseExpectValueException("解析Array出错, ,后必须存在值.");
+						throw new ParseExpectValueException("解析Array出错, ','后必须存在值.");
+					}
+					else if(isBlankPre){
+						isBlankPre = false;
+						break;
 					}
 					else{
 						list.add(parse(valueTmp.toString()));//解析之前缓存的值
 						valueTmp.delete(0,valueTmp.length());
-						}
+					}
 					break;
 				case ']':
 					list.add(parse(valueTmp.toString()));//解析之前缓存的值
@@ -305,29 +357,74 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 						throw new ParseExpectValueException("解析Object失败，应以}结尾。");
 					}
 					jsonContext.setIndex(++index);
-					jsonContext = parseWhiteSpace(jsonContext);
-					while(true){
-						char valChar = jsonContext.getJsonCharValueAtIndex(index);
-						if(valChar == ',' ){
-							valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
-							nameTmp.delete(0, nameTmp.length());
-							valueTmp.delete(0, valueTmp.length());
+//					jsonContext = parseWhiteSpace(jsonContext);
+					if(jsonContext.getJsonCharValueAtIndex(index-1)=='"'){
+						boolean isFirst = true;//用于判断是否是下一个value值得首位
+						while(true){
+							char valChar = jsonContext.getJsonCharValueAtIndex(index);
+							if(valChar == '"' && isFirst){
+								isFirst=false;
+								if(checkIndexIfOut(index+1, array))
+									throw new ParseExpectValueException("解析Json失败.");
+								valueTmp.append(valChar);
+								jsonContext.setIndex(++index);
+								while(true){
+									char tmp=jsonContext.getJsonCharValueAtIndex(index);
+									if(tmp == ',' && jsonContext.getJsonCharValueAtIndex(index-1)=='"'){
+										valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
+										nameTmp.delete(0, nameTmp.length());
+										valueTmp.delete(0, valueTmp.length());
+										isFirst =true;
+										break;
+									}
+									else if(tmp == '}' && jsonContext.getJsonCharValueAtIndex(index-1)=='"'){
+										valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
+										value.setValue(valueMap);
+										return value;
+									}
+									else{
+										valueTmp.append(tmp);
+										if(checkIndexIfOut(index+1, array))
+											throw new ParseExpectValueException("解析Json失败.");
+										jsonContext.setIndex(++index);
+									}
+								}
+
+							}
+							else if(valChar == '"' && !isFirst){
+								throw new ParseExpectValueException("语法错误");
+							}
+							else if(valChar == '[' && isFirst){
+								isFirst = false;
+								if(checkIndexIfOut(index+1, array))
+									throw new ParseExpectValueException("解析Json失败.");
+								valueTmp.append(valChar);
+								jsonContext.setIndex(++index);
+								while(true){
+									char tmp = jsonContext.getJsonCharValueAtIndex(index);
+									if(checkIndexIfOut(index+1, array))
+										throw new ParseExpectValueException("解析Json失败.");
+									if(tmp == ']' && jsonContext.getJsonCharValueAtIndex(index+1)==0){
+										
+									}
+								}
+								
+							}
+							else if(valChar == '}'){
+								valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
+								value.setValue(valueMap);
+								return value;
+							}
+							valueTmp.append(valChar);
 							if(checkIndexIfOut(index+1, array))
 								throw new ParseExpectValueException("解析Json失败.");
-							break;
-						}
-						else if(valChar == '}'){
-							valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
-							value.setValue(valueMap);
-							return value;
-						}
-						valueTmp.append(valChar);
-						if(checkIndexIfOut(index+1, array))
-							throw new ParseExpectValueException("解析Json失败.");
-						jsonContext.setIndex(++index);
-							
+							jsonContext.setIndex(++index);
+						}	
 					}
-					break;
+					else{
+						nameTmp.append(curChar);
+						break;
+					}
 				case '}':
 					valueMap.put(nameTmp.toString(),parse(valueTmp.toString()));//解析之前缓存的值
 					value.setValue(valueMap);

@@ -11,4 +11,3 @@ public class ArrayValue extends AbstractJsonValue<List<? super AbstractJsonValue
 	}
 
 }
- 

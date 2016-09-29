@@ -6,10 +6,6 @@ import org.junit.Test;
 import com.alibaba.fastjson.JSONObject;
 import com.khalid.toys.json.core.exception.JsonParseException;
 import com.khalid.toys.json.core.exception.JsonParseValueException;
-import com.khalid.toys.json.core.exception.ParseExpectValueException;
-import com.khalid.toys.json.core.exception.ParseInvalidValueException;
-import com.khalid.toys.json.core.exception.ParseNumberTooHugeExcpetion;
-import com.khalid.toys.json.core.exception.ParseRootNotSingularException;
 import com.khalid.toys.json.core.parse.SimpleValueParser;
 import com.khalid.toys.json.core.value.ArrayValue;
 import com.khalid.toys.json.core.value.BooleanValue;
@@ -142,15 +138,17 @@ public class ParseValueTest
     public void testToys(){
     	String s = "12\2E11";
     	char c1= '\7';
-    	System.out.println((int)'\"'<0x20);
+    	System.out.println((int)'\"');
+    	System.out.println((int)'"');
+    	System.out.println('\"'=='"');
     	System.out.println((char)0x09);
     	System.out.println((int)c1);
     	char c = s.charAt(2);
-    	String jsonStr ="{\"value\":\"12\2E11\",\"js\":true}";
+    	String jsonStr ="{\"array\":[\"va\\nlue\",\"1211\",\"js\"]}";
     	JSONObject jsonObject = new JSONObject();
     	Object object = jsonObject.parse(jsonStr);
 //    	TestParseObject object2 = (TestParseObject) jsonObject.parseObject(jsonStr,TestParseObject.class);
-//    	double value = Double.valueOf(s);
+    	double value = Double.valueOf(s);
     	if(c==92){
     		return;
     	}
@@ -159,7 +157,7 @@ public class ParseValueTest
     
     @Test
     public void testParseArray(){
-    	String s="[\"123123\",1.1,123]";
+    	String s="[  \"1231\"  ,  \"23\"  ,  1.1  ,  123  ]  ";
     	try {
 			System.out.println(new SimpleValueParser<ArrayValue>().parse(s));
 		} catch (JsonParseException e) {
@@ -170,7 +168,7 @@ public class ParseValueTest
     
     @Test
     public void testParseObject(){
-    	String s = "{\"name\":\"feiyeu\",\"value\":123}";
+    	String s = "{\"name\":\"feiyeu\",\"value\":123,\"array\":[\"123123\",1.1,123]}";
 		try {
 			System.out.println(new SimpleValueParser<ObjectValue>().parse(s));
 		} catch (JsonParseValueException e) {
