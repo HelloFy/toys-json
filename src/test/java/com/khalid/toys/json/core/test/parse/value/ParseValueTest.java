@@ -160,7 +160,7 @@ public class ParseValueTest
     
     @Test
     public void testParseArray(){
-    	String s="   [  \"12\\"+"\"31\"  ,  \"23\"  ,  1.1  ,  123  ]   ";
+    	String s="   [  \"12\\"+"\"31\"  ,  \"23\"  ,  1.1  ,  123,true,false,null,[123,234,True]]   ";
     	System.out.println(s);
     	try {
 			System.out.println(new SimpleValueParser<ArrayValue>().parse(s));

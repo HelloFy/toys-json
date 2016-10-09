@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSONException;
+import com.khalid.toys.json.core.exception.JsonParseException;
 import com.khalid.toys.json.core.exception.JsonParseValueException;
 import com.khalid.toys.json.core.exception.ParseExpectValueException;
 import com.khalid.toys.json.core.exception.ParseInvalidValueException;
@@ -40,6 +42,22 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		return ('1'<=ch && ch<='9')? true : false;
 	}
 	
+	private String parseIdentity(JsonContext jsonContext) throws JsonParseException{
+		int index = jsonContext.getIndex();
+		char ch;
+		char[] array = jsonContext.getJsonCharArray();
+		StringBuilder identity =  new StringBuilder();
+		while((ch = jsonContext.getJsonCharValueAtIndex(index)) != '"'){
+			if(checkIndexIfOut(index+1, array)){
+				throw new ParseExpectValueException("解析对象失败");
+			}
+			index++;
+			identity.append(ch);
+		}
+		
+		return identity.toString();
+	}
+	
 
 	public JsonContext parseWhiteSpace(JsonContext jsonContext){
 		int index = jsonContext.getIndex();
@@ -55,6 +73,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 	
 	public NullValue parseNull(NullValue value,JsonContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
+		char[] array = jsonContext.getJsonCharArray();
 		if(jsonContext.getJsonCharValueAtIndex(index) != 'n')
 			throw new ParseExpectValueException("解析NULL失败,NULL值必须以字符n开始!");
 		if(checkIndexIfOut(index+3, jsonContext.getJsonCharArray())){
@@ -68,11 +87,19 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			throw new ParseExpectValueException("解析NULL失败,NULL值应为null",e);
 		}
 		value.setValue("null");
-		return value;
+		index = jsonContext.getIndex();
+		if(!checkIndexIfOut(index+1, array)){
+			jsonContext.setIndex(++index);
+			return value;
+		}
+		else{
+			throw new ParseExpectValueException("JSON格式错误");
+		}
 	}
 	
 	public BooleanValue parseTrue(BooleanValue value ,JsonContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
+		char[] array = jsonContext.getJsonCharArray();
 		if(jsonContext.getJsonCharValueAtIndex(index) != 't'){
 			throw new ParseExpectValueException("解析Boolean.TRUE失败,TRUE值必须以字符t开始!");
 		}
@@ -87,11 +114,19 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			throw new ParseExpectValueException("解析Boolean.TRUE失败,TRUE值应为true",e);
 		}
 		value.setValue(true);
-		return value;
+		index = jsonContext.getIndex();
+		if(!checkIndexIfOut(index+1, array)){
+			jsonContext.setIndex(++index);
+			return value;
+		}
+		else{
+			throw new ParseExpectValueException("JSON格式错误");
+		}
 	}
 	
 	public BooleanValue parseFalse(BooleanValue value , JsonContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
+		char[] array = jsonContext.getJsonCharArray();
 		if(jsonContext.getJsonCharValueAtIndex(index) != 'f'){
 			throw new ParseExpectValueException("解析Boolean.FALSE失败,FALSE值必须以字符t开始!");
 		}
@@ -106,11 +141,18 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			throw new ParseExpectValueException("解析Boolean.FALSE失败,FALSE值应为false",e);
 		}
 		value.setValue(false);
-		return value;
+		index = jsonContext.getIndex();
+		if(!checkIndexIfOut(index+1, array)){
+			jsonContext.setIndex(++index);
+			return value;
+		}
+		else{
+			throw new ParseExpectValueException("JSON格式错误");
+		}
 	} 
 	
 	
-	public NumberValue parseNumber(NumberValue value , JsonContext jsonContext) throws ParseInvalidValueException, ParseNumberTooHugeExcpetion{
+	public NumberValue parseNumber(NumberValue value , JsonContext jsonContext) throws ParseInvalidValueException, ParseNumberTooHugeExcpetion, ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		final char[] array = jsonContext.getJsonCharArray();
 		StringBuilder numberStr = new StringBuilder();
@@ -196,9 +238,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		if(Double.isInfinite(value.getValue())){
 			throw new ParseNumberTooHugeExcpetion("数字越界");
 		}
-		
 		return value;
-	
 	}
 	
 	public StringValue parseString(StringValue value , JsonContext jsonContext) throws ParseRootNotSingularException, ParseExpectValueException, ParseStringInvalidEscapeException{
@@ -216,11 +256,14 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		while(true){
 			curChar = jsonContext.getJsonCharValueAtIndex(index);
 			if(curChar == '"'){
-				if(checkIndexIfOut(index+1, array)){
-					value.setValue(stringValue.toString());
+				value.setValue(stringValue.toString());
+				if(!checkIndexIfOut(index+1, array)){
+					jsonContext.setIndex(++index);
 					return value;
 				}
-				stringValue.append(curChar);
+				else{
+					throw new ParseExpectValueException("JSON格式错误");
+				}
 			}
 			else if(curChar == '\\'){
 				if(checkIndexIfOut(index+1, array)){
@@ -269,76 +312,35 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 	
 	public ArrayValue parseArray(ArrayValue value,JsonContext jsonContext) throws JsonParseValueException{
 		List<? super AbstractJsonValue<?>> list =new ArrayList<>();
-		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
+		int index = jsonContext.getIndex();
 		if(checkIndexIfOut(index+1, array)){
 			throw new ParseExpectValueException("解析Array失败，应以]结尾。");
 		}
 		jsonContext.setIndex(++index);
-		StringBuilder valueTmp = new StringBuilder(); 
-		boolean isBlankPre = false;
+		parseWhiteSpace(jsonContext);
 		while(true){
-			char curChar = jsonContext.getJsonCharValueAtIndex(index);
-			switch (curChar) {
-				case '"'://对String类型单独处理
-					valueTmp.append(curChar);
-					if(checkIndexIfOut(index+1, array)){
-						throw new ParseExpectValueException("解析Array出错,应以]结尾");
-					}
+			index = jsonContext.getIndex();
+			char ch = jsonContext.getJsonCharValueAtIndex(index);
+			if(ch == ','){
+				if(!checkIndexIfOut(index+1, array)){
 					jsonContext.setIndex(++index);
-					while(true){
-						char stringVal = jsonContext.getJsonCharValueAtIndex(index);
-						if(checkIndexIfOut(index+1, array)){
-							throw new ParseExpectValueException("解析Array出错,应以]结尾");
-						}
-						else if(stringVal == '"' //防止转义字符
-											&& jsonContext.getJsonCharValueAtIndex(index-1) != '\\'){
-							valueTmp.append(stringVal);
-							list.add(parse(valueTmp.toString()));
-							valueTmp.delete(0, valueTmp.length());
-							if(checkIndexIfOut(index+2, array)){
-								throw new ParseExpectValueException("解析Array出错,应以]结尾");
-							}
-							jsonContext.setIndex(++index);
-							parseWhiteSpace(jsonContext);
-							index = jsonContext.getIndex()-1;
-							isBlankPre =true;
-							break;
-						}
-						else{
-							valueTmp.append(stringVal);
-							jsonContext.setIndex(++index);
-						}	
-					}
-					break;
-				case ',':
-					if(checkIndexIfOut(index+1, array)){
-						throw new ParseExpectValueException("解析Array出错, ','后必须存在值.");
-					}
-					else if(jsonContext.getJsonCharValueAtIndex(index+1) == ']'){
-						throw new ParseExpectValueException("解析Array出错, ','后必须存在值.");
-					}
-					else if(isBlankPre){
-						isBlankPre = false;
-						break;
-					}
-					else{
-						list.add(parse(valueTmp.toString()));//解析之前缓存的值
-						valueTmp.delete(0,valueTmp.length());
-					}
-					break;
-				case ']':
-					list.add(parse(valueTmp.toString()));//解析之前缓存的值
-					value.setValue(list);
-					return value;
-				default:
-					valueTmp.append(curChar);
-					break;
-					
+					parseWhiteSpace(jsonContext);
+				}
+				else{
+					throw new ParseExpectValueException("，后需要一个值");
+				}
 			}
-			if(checkIndexIfOut(index+1, array))
-				throw new ParseExpectValueException("解析数组失败.");
-			jsonContext.setIndex(++index);
+			else if(ch == ']'){
+				value.setValue(list);
+				if(!checkIndexIfOut(index+1, array))
+					jsonContext.setIndex(++index);
+				else
+					throw new ParseExpectValueException("JSON格式错误");
+				return value;
+			}
+			list.add(parseValue(jsonContext));
+			parseWhiteSpace(jsonContext);
 		}
 	}
 	
