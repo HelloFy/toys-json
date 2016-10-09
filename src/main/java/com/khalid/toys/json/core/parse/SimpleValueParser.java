@@ -42,6 +42,23 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		return ('1'<=ch && ch<='9')? true : false;
 	}
 	
+	
+	private char parseUnicode(JsonContext jsonContext) throws ParseExpectValueException{
+		int index = jsonContext.getIndex();
+		char[] array = jsonContext.getJsonCharArray();
+		if(checkIndexIfOut(index+4, array)){
+			throw new ParseExpectValueException("UniCode长度不足");
+		}
+		jsonContext.setIndex(++index);
+		StringBuilder sb = new StringBuilder(4);
+		for(int i = 0;i < 4; i++){
+			sb.append(jsonContext.getJsonCharValueAtIndex(index+i));
+		}
+		jsonContext.setIndex(index+4);
+		int nfe = Integer.parseInt(sb.toString(), 16);
+		return (char)nfe;
+	}
+	
 	private String parseIdentity(JsonContext jsonContext) throws JsonParseException{
 		int index = jsonContext.getIndex();
 		char ch;
@@ -280,6 +297,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 					case 'f': stringValue.append('\f');break;
 					case 'n': stringValue.append('\n');break;
 					case 'r': stringValue.append('\r');break;
+					case 'u': stringValue.append(parseUnicode(jsonContext));break;
 					case 't': stringValue.append('\t');break;
 					default:
 						throw new ParseStringInvalidEscapeException("解析String失败，转义字符非法");
@@ -352,6 +370,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			throw new ParseExpectValueException("解析Object失败，应以}结尾。");
 		}
 		jsonContext.setIndex(++index);
+		parseWhiteSpace(jsonContext);
 		StringBuilder nameTmp = new StringBuilder();
 		StringBuilder valueTmp = new StringBuilder();
 		while(true){

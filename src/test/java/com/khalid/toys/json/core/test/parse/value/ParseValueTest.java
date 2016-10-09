@@ -113,7 +113,7 @@ public class ParseValueTest
     @Test
     public void parseString(){
 		try {
-			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\n\"32\""));
+			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\\u4e2d\n\" "));
 		} catch (JsonParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -127,7 +127,7 @@ public class ParseValueTest
 		}
 
 		try {
-			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\tt\"\"\"\"\""));
+			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\tt\\\"\" "));
 		} catch (JsonParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -160,7 +160,7 @@ public class ParseValueTest
     
     @Test
     public void testParseArray(){
-    	String s="   [  \"12\\"+"\"31\"  ,  \"23\"  ,  1.1  ,  123,true,false,null,[123,234,True]]   ";
+    	String s="   [  \"12\\"+"\"31\"  ,  \"23\"  ,  1.1  ,  123,true,false,null,[123,234,true]]   ";
     	System.out.println(s);
     	try {
 			System.out.println(new SimpleValueParser<ArrayValue>().parse(s));
