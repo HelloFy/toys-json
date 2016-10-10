@@ -378,8 +378,8 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 					}
 					jsonContext.setIndex(++index);
 					jsonContext = parseWhiteSpace(jsonContext);
-					if(valueMap.containsKey(nameTmp.toString())){
-						throw new JSONParseValueException("JSON Key:"+nameTmp+" 重复。",index,JSONType.TYPE_OBJECT);
+					if(valueMap.containsKey(nameTmp.getValue())){
+						throw new JSONParseValueException("JSON Key:"+nameTmp.getValue()+" 重复。",index,JSONType.TYPE_OBJECT);
 					}
 					else{
 						valueMap.put(nameTmp.getValue(), parseValue(jsonContext));

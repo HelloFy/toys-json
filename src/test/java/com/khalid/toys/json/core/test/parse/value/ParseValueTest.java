@@ -168,7 +168,7 @@ public class ParseValueTest
     
     @Test
     public void testParseObject(){
-    	String s = "{\"name\":\"feiyeu\",\"value\":123,\"array\":[\"123123\",1.1,123]}";
+    	String s = "{\"name\":\"费玥\",\"value\":123,\"name2\":[\"123123\",1.1,123]}";
     	try {
 			System.out.println(new SimpleValueParser<>().parse(s));
 		} catch (JSONParseException e) {

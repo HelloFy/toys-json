@@ -35,4 +35,15 @@ public abstract class AbstractJsonValue<T> implements Value<T> {
 		return jsonType+"Value:"+value;	
 	}
 	
+	@Override
+	public boolean equals(Object obj){
+		if(!(obj instanceof AbstractJsonValue)){
+			return false;
+		}
+		else {
+			AbstractJsonValue<?> objTmp = (AbstractJsonValue<?>)obj;
+			return value.equals(objTmp.value);
+		}
+	}
+	
 }
