@@ -5,13 +5,11 @@ import org.junit.Test;
 
 import com.alibaba.fastjson.JSONObject;
 import com.khalid.toys.json.core.exception.JSONParseException;
-import com.khalid.toys.json.core.exception.JSONParseValueException;
 import com.khalid.toys.json.core.parse.SimpleValueParser;
 import com.khalid.toys.json.core.value.ArrayValue;
 import com.khalid.toys.json.core.value.BooleanValue;
 import com.khalid.toys.json.core.value.NullValue;
 import com.khalid.toys.json.core.value.NumberValue;
-import com.khalid.toys.json.core.value.ObjectValue;
 import com.khalid.toys.json.core.value.StringValue;
 
 public class ParseValueTest 
@@ -111,7 +109,7 @@ public class ParseValueTest
     @Test
     public void parseString(){
 		try {
-			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\\u4e2d\n\" "));
+			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\\u52B2\n\" "));
 		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -143,7 +141,7 @@ public class ParseValueTest
     	System.out.println('\"'=='"');
     	System.out.println((char)0x09);
     	System.out.println((int)c1);
-  
+    	System.out.println(123<0x1FFF);
     	char c = s.charAt(2);
     	String s1="{\"array\":[  \"12,\\"+"\"31\"  ,  \"23\"  ,  1.1  ,  123  ]  }";
 

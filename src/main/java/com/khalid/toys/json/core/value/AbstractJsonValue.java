@@ -1,6 +1,6 @@
 package com.khalid.toys.json.core.value;
 
-import com.khalid.toys.json.core.type.JsonType;
+import com.khalid.toys.json.core.type.JSONType;
 
 
 /**
@@ -10,11 +10,11 @@ import com.khalid.toys.json.core.type.JsonType;
  * */
 public abstract class AbstractJsonValue<T> implements Value<T> {
 
-	protected JsonType jsonType;
+	protected JSONType jsonType;
 	
 	private T value;
 	
-	public void setJsonType(JsonType jsonType){
+	public void setJsonType(JSONType jsonType){
 		this.jsonType = jsonType;
 	} 
 	
@@ -26,7 +26,7 @@ public abstract class AbstractJsonValue<T> implements Value<T> {
 		this.value = value;
 	}
 	
-	public JsonType getJsonType(){
+	public JSONType getJsonType(){
 		return jsonType;
 	}
 	

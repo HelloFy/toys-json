@@ -5,14 +5,14 @@ package com.khalid.toys.json.core.type;
  * @author 费玥
  * @since 2016 09 21
  * */
-public enum JsonType{
+public enum JSONType{
 	
 	TYPE_NULL("null"),TYPE_BOOLEAN("boolean"),TYPE_NUMBER("number"),
 	TYPE_STRING("string"),TYPE_ARRAY("array"),TYPE_OBJECT("object");
 	
 	private String typeName;
 	
-	JsonType(String typeName){
+	JSONType(String typeName){
 		this.typeName=typeName;
 	}
 	

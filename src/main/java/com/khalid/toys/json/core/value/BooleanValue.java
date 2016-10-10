@@ -1,11 +1,11 @@
 package com.khalid.toys.json.core.value;
 
-import com.khalid.toys.json.core.type.JsonType;
+import com.khalid.toys.json.core.type.JSONType;
 
 public final class BooleanValue extends AbstractJsonValue<Boolean>{
 	
 	public BooleanValue(){
-		super.setJsonType(JsonType.TYPE_BOOLEAN);
+		super.setJsonType(JSONType.TYPE_BOOLEAN);
 	}
 
 }

@@ -1,9 +1,17 @@
 package com.khalid.toys.json.core.parse;
 
+import java.lang.reflect.Array;
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.plaf.ListUI;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 
 import com.khalid.toys.json.core.exception.JSONParseException;
 import com.khalid.toys.json.core.exception.ParseExpectValueException;
@@ -18,6 +26,8 @@ import com.khalid.toys.json.core.value.NullValue;
 import com.khalid.toys.json.core.value.NumberValue;
 import com.khalid.toys.json.core.value.ObjectValue;
 import com.khalid.toys.json.core.value.StringValue;
+
+import org.junit.*;
 
 public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueParse<T> {
 	
@@ -41,7 +51,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 	}
 	
 	
-	private char parseUnicode(JSONContext jsonContext) throws ParseExpectValueException{
+	private int parseUnicode(JSONContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
 		if(checkIndexIfOut(index+4, array)){
@@ -50,13 +60,15 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		jsonContext.setIndex(++index);
 		StringBuilder sb = new StringBuilder(4);
 		for(int i = 0;i < 4; i++){
-			sb.append(jsonContext.getJsonCharValueAtIndex(index+i));
+			char ch = jsonContext.getJsonCharValueAtIndex(index+i);
+			if      (ch >= '0' && ch <= '9')  sb.append(ch);
+	        else if (ch >= 'A' && ch <= 'F')  sb.append(ch);
+	        else if (ch >= 'a' && ch <= 'f')  sb.append(ch);
+	        else throw new ParseExpectValueException("Unicode 格式错误。");
 		}
 		jsonContext.setIndex(index+4);
-		int nfe = Integer.parseInt(sb.toString(), 16);
-		return (char)nfe;
+		return Integer.parseInt(sb.toString(), 16);
 	}
-	
 
 	public JSONContext parseWhiteSpace(JSONContext jsonContext){
 		int index = jsonContext.getIndex();
@@ -253,6 +265,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		}
 		jsonContext.setIndex(++index);
 		while(true){
+			index=jsonContext.getIndex();
 			curChar = jsonContext.getJsonCharValueAtIndex(index);
 			if(curChar == '"'){
 				value.setValue(stringValue.toString());
@@ -279,7 +292,33 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 					case 'f': stringValue.append('\f');break;
 					case 'n': stringValue.append('\n');break;
 					case 'r': stringValue.append('\r');break;
-					case 'u': stringValue.append(parseUnicode(jsonContext));break;
+					case 'u': 
+						int nfe = parseUnicode(jsonContext);
+						index = jsonContext.getIndex();
+						if (nfe >= 0xD800 && nfe <= 0xDBFF){
+							index = jsonContext.getIndex();
+							curChar = jsonContext.getJsonCharValueAtIndex(index);
+							if(curChar != '\\'){
+								throw new ParseExpectValueException("Unicode格式错误。");
+							}
+							if(checkIndexIfOut(index+1, array)){
+								throw new ParseExpectValueException("Unicode格式错误。");
+							}
+							else{
+								index++;
+							}
+							curChar = jsonContext.getJsonCharValueAtIndex(index);
+							if(curChar != 'u'){
+								throw new ParseExpectValueException("Unicode格式错误。");
+							}
+							int nfe2 = parseUnicode(jsonContext);
+							if (nfe2 < 0xDC00 || nfe2 > 0xDFFF){
+								throw new ParseExpectValueException("Unicode格式错误。");
+							}
+					        nfe = (((nfe - 0xD800) << 10) | (nfe2 - 0xDC00)) + 0x10000;
+						}
+						stringValue.append((char)nfe);
+						break;
 					case 't': stringValue.append('\t');break;
 					default:
 						throw new ParseStringInvalidEscapeException("解析String失败，转义字符非法");
@@ -423,7 +462,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 	@SuppressWarnings("unchecked")
 	public T parse(String jsonStr) throws JSONParseException {
 		// TODO Auto-generated method stub
-		if(jsonStr == null || jsonStr.isEmpty()){
+		if(StringUtils.isEmpty(jsonStr)){
 			throw new ParseRootNotSingularException("Json串空");
 		}
 		JSONContext jsonContext = new JSONContext(jsonStr);

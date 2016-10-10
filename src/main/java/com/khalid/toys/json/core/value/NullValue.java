@@ -1,11 +1,11 @@
 package com.khalid.toys.json.core.value;
 
-import com.khalid.toys.json.core.type.JsonType;
+import com.khalid.toys.json.core.type.JSONType;
 
 public final class NullValue extends StringValue {
 
 	public NullValue(){
-		super.setJsonType(JsonType.TYPE_NULL);
+		super.setJsonType(JSONType.TYPE_NULL);
 	}
 	
 }
