@@ -17,7 +17,7 @@ public class ParseValueTest
 	@Test
     public void testParseNullValue(){
 		try {
-			Assert.assertEquals("value:null",new SimpleValueParser<NullValue>().parse("").toString());
+			Assert.assertEquals("value:null",new SimpleValueParser<NullValue>().parse("nul ").toString());
 		} catch (JSONParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

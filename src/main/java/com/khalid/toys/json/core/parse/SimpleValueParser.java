@@ -29,7 +29,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		int index = jsonContext.getIndex();
 		for(int i=0;i<literal.length;i++){
 			if(jsonContext.getJsonCharValueAtIndex(index+i) != literal[i]){
-				throw new JSONParseValueException("解析失败，期望值与实际值不符",index);
+				throw new JSONParseValueException("解析失败，期望 "+literal[i]+" 实际"+jsonContext.getJsonCharValueAtIndex(index+i),index+i);
 			}
 		}
 		jsonContext.setIndex(index+literal.length-1);
@@ -79,12 +79,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			throw new JSONParseValueException("解析NULL失败,NULL值长度不够",index,JSONType.TYPE_NULL);
 		}
 		char[] literal = new char[]{'n','u','l','l'};
-		try{
-			validateForLiteral(jsonContext,literal);
-		}
-		catch(JSONParseException e){
-			throw new JSONParseValueException("解析NULL失败,NULL值应为null",e,index,JSONType.TYPE_NULL);
-		}
+		validateForLiteral(jsonContext,literal);
 		value.setValue("null");
 		index = jsonContext.getIndex();
 		if(!checkIndexIfOut(index+1, array)){
@@ -103,12 +98,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			throw new JSONParseValueException("解析Boolean.TRUE失败,TRUE值长度不够",index,JSONType.TYPE_BOOLEAN);
 		}
 		char[] literal = new char[]{'t','r','u','e'};
-		try{
-			validateForLiteral(jsonContext,literal);
-		}
-		catch(JSONParseValueException e){
-			throw new JSONParseValueException("解析Boolean.TRUE失败,TRUE值应为true",e,index,JSONType.TYPE_BOOLEAN);
-		}
+		validateForLiteral(jsonContext,literal);
 		value.setValue(true);
 		index = jsonContext.getIndex();
 		if(!checkIndexIfOut(index+1, array)){
@@ -127,12 +117,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 			throw new JSONParseValueException("解析Boolean.FALSE失败,FALSE值长度不够",index,JSONType.TYPE_BOOLEAN);
 		}
 		char[] literal = new char[]{'f','a','l','s','e'};
-		try{
-			validateForLiteral(jsonContext,literal);
-		}
-		catch(JSONParseValueException e){
-			throw new JSONParseValueException("解析Boolean.FALSE失败,FALSE值应为false",e,index,JSONType.TYPE_BOOLEAN);
-		}
+		validateForLiteral(jsonContext,literal);
 		value.setValue(false);
 		index = jsonContext.getIndex();
 		if(!checkIndexIfOut(index+1, array)){
