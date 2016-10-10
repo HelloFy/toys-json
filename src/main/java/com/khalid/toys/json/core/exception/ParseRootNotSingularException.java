@@ -1,6 +1,6 @@
 package com.khalid.toys.json.core.exception;
 
-public class ParseRootNotSingularException extends JsonParseValueException{
+public class ParseRootNotSingularException extends JSONParseValueException{
 
 	/**
 	 * 

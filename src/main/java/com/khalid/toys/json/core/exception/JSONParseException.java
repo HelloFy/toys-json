@@ -6,18 +6,18 @@ package com.khalid.toys.json.core.exception;
  * @author 费玥
  * @since 2016.9.20
  * */
-public abstract class JsonParseException extends Exception {
+public abstract class JSONParseException extends Exception {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	public JsonParseException(String msg){
+	public JSONParseException(String msg){
 		super(msg);
 	}
 	
-	public JsonParseException(String msg , Throwable cause){
+	public JSONParseException(String msg , Throwable cause){
 		super(msg,cause);
 	}
 	
@@ -26,10 +26,10 @@ public abstract class JsonParseException extends Exception {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof JsonParseException)) {
+		if (!(other instanceof JSONParseException)) {
 			return false;
 		}
-		JsonParseException otherE = (JsonParseException) other;
+		JSONParseException otherE = (JSONParseException) other;
 		return (getMessage().equals(otherE.getMessage()) &&
 				getCause() != null && getCause().equals( otherE.getCause()));
 	}

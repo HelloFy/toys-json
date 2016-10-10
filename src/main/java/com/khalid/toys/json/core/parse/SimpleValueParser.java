@@ -5,9 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.alibaba.fastjson.JSONException;
-import com.khalid.toys.json.core.exception.JsonParseException;
-import com.khalid.toys.json.core.exception.JsonParseValueException;
+import com.khalid.toys.json.core.exception.JSONParseException;
 import com.khalid.toys.json.core.exception.ParseExpectValueException;
 import com.khalid.toys.json.core.exception.ParseInvalidValueException;
 import com.khalid.toys.json.core.exception.ParseNumberTooHugeExcpetion;
@@ -27,7 +25,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		return (index < array.length ) ? false : true;
 	}
 	
-	private JsonContext validateForLiteral(JsonContext jsonContext,char[] literal) throws ParseExpectValueException{
+	private JSONContext validateForLiteral(JSONContext jsonContext,char[] literal) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		for(int i=0;i<literal.length;i++){
 			if(jsonContext.getJsonCharValueAtIndex(index+i) != literal[i]){
@@ -43,7 +41,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 	}
 	
 	
-	private char parseUnicode(JsonContext jsonContext) throws ParseExpectValueException{
+	private char parseUnicode(JSONContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
 		if(checkIndexIfOut(index+4, array)){
@@ -59,24 +57,8 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		return (char)nfe;
 	}
 	
-	private String parseIdentity(JsonContext jsonContext) throws JsonParseException{
-		int index = jsonContext.getIndex();
-		char ch;
-		char[] array = jsonContext.getJsonCharArray();
-		StringBuilder identity =  new StringBuilder();
-		while((ch = jsonContext.getJsonCharValueAtIndex(index)) != '"'){
-			if(checkIndexIfOut(index+1, array)){
-				throw new ParseExpectValueException("解析对象失败");
-			}
-			index++;
-			identity.append(ch);
-		}
-		
-		return identity.toString();
-	}
-	
 
-	public JsonContext parseWhiteSpace(JsonContext jsonContext){
+	public JSONContext parseWhiteSpace(JSONContext jsonContext){
 		int index = jsonContext.getIndex();
 		char curChar = jsonContext.getJsonCharValueAtIndex(index);
 		while(curChar == ' ' || curChar == '\t' || curChar == '\n' || curChar == '\r'){
@@ -88,7 +70,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		return jsonContext;
 	}
 	
-	public NullValue parseNull(NullValue value,JsonContext jsonContext) throws ParseExpectValueException{
+	public NullValue parseNull(NullValue value,JSONContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
 		if(jsonContext.getJsonCharValueAtIndex(index) != 'n')
@@ -114,7 +96,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		}
 	}
 	
-	public BooleanValue parseTrue(BooleanValue value ,JsonContext jsonContext) throws ParseExpectValueException{
+	public BooleanValue parseTrue(BooleanValue value ,JSONContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
 		if(jsonContext.getJsonCharValueAtIndex(index) != 't'){
@@ -141,7 +123,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		}
 	}
 	
-	public BooleanValue parseFalse(BooleanValue value , JsonContext jsonContext) throws ParseExpectValueException{
+	public BooleanValue parseFalse(BooleanValue value , JSONContext jsonContext) throws ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
 		if(jsonContext.getJsonCharValueAtIndex(index) != 'f'){
@@ -169,7 +151,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 	} 
 	
 	
-	public NumberValue parseNumber(NumberValue value , JsonContext jsonContext) throws ParseInvalidValueException, ParseNumberTooHugeExcpetion, ParseExpectValueException{
+	public NumberValue parseNumber(NumberValue value , JSONContext jsonContext) throws ParseInvalidValueException, ParseNumberTooHugeExcpetion, ParseExpectValueException{
 		int index = jsonContext.getIndex();
 		final char[] array = jsonContext.getJsonCharArray();
 		StringBuilder numberStr = new StringBuilder();
@@ -258,7 +240,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		return value;
 	}
 	
-	public StringValue parseString(StringValue value , JsonContext jsonContext) throws ParseRootNotSingularException, ParseExpectValueException, ParseStringInvalidEscapeException{
+	public StringValue parseString(StringValue value , JSONContext jsonContext) throws ParseRootNotSingularException, ParseExpectValueException, ParseStringInvalidEscapeException{
 		StringBuilder stringValue = new StringBuilder();
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
@@ -328,7 +310,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		}
 	}
 	
-	public ArrayValue parseArray(ArrayValue value,JsonContext jsonContext) throws JsonParseValueException{
+	public ArrayValue parseArray(ArrayValue value,JSONContext jsonContext) throws JSONParseException{
 		List<? super AbstractJsonValue<?>> list =new ArrayList<>();
 		char[] array = jsonContext.getJsonCharArray();
 		int index = jsonContext.getIndex();
@@ -362,7 +344,7 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		}
 	}
 	
-	public ObjectValue parseObject(ObjectValue value , JsonContext jsonContext) throws JsonParseValueException{
+	public ObjectValue parseObject(ObjectValue value , JSONContext jsonContext) throws JSONParseException{
 		Map<String,? super AbstractJsonValue<?>> valueMap = new HashMap<>();
 		int index = jsonContext.getIndex();
 		char[] array = jsonContext.getJsonCharArray();
@@ -371,104 +353,52 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 		}
 		jsonContext.setIndex(++index);
 		parseWhiteSpace(jsonContext);
-		StringBuilder nameTmp = new StringBuilder();
-		StringBuilder valueTmp = new StringBuilder();
+		StringValue nameTmp = new StringValue();
 		while(true){
+			index = jsonContext.getIndex();
 			char curChar = jsonContext.getJsonCharValueAtIndex(index);
 			switch (curChar) {
 				case '"':
+					parseString(nameTmp, jsonContext);
+					parseWhiteSpace(jsonContext);
+					break;
+				case ',':
+					if(checkIndexIfOut(index+1, array)){
+						throw new ParseExpectValueException("解析Object失败，应以}结尾。");
+					}
+					jsonContext.setIndex(++index);
+					jsonContext = parseWhiteSpace(jsonContext);
+					break;
 				case ':':
 					if(checkIndexIfOut(index+1, array)){
 						throw new ParseExpectValueException("解析Object失败，应以}结尾。");
 					}
 					jsonContext.setIndex(++index);
-//					jsonContext = parseWhiteSpace(jsonContext);
-					if(jsonContext.getJsonCharValueAtIndex(index-1)=='"'){
-						boolean isFirst = true;//用于判断是否是下一个value值得首位
-						while(true){
-							char valChar = jsonContext.getJsonCharValueAtIndex(index);
-							if(valChar == '"' && isFirst){
-								isFirst=false;
-								if(checkIndexIfOut(index+1, array))
-									throw new ParseExpectValueException("解析Json失败.");
-								valueTmp.append(valChar);
-								jsonContext.setIndex(++index);
-								while(true){
-									char tmp=jsonContext.getJsonCharValueAtIndex(index);
-									if(tmp == ',' && jsonContext.getJsonCharValueAtIndex(index-1)=='"'){
-										valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
-										nameTmp.delete(0, nameTmp.length());
-										valueTmp.delete(0, valueTmp.length());
-										isFirst =true;
-										break;
-									}
-									else if(tmp == '}' && jsonContext.getJsonCharValueAtIndex(index-1)=='"'){
-										valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
-										value.setValue(valueMap);
-										return value;
-									}
-									else{
-										valueTmp.append(tmp);
-										if(checkIndexIfOut(index+1, array))
-											throw new ParseExpectValueException("解析Json失败.");
-										jsonContext.setIndex(++index);
-									}
-								}
-
-							}
-							else if(valChar == '"' && !isFirst){
-								throw new ParseExpectValueException("语法错误");
-							}
-							else if(valChar == '[' && isFirst){
-								isFirst = false;
-								if(checkIndexIfOut(index+1, array))
-									throw new ParseExpectValueException("解析Json失败.");
-								valueTmp.append(valChar);
-								jsonContext.setIndex(++index);
-								while(true){
-									char tmp = jsonContext.getJsonCharValueAtIndex(index);
-									if(checkIndexIfOut(index+1, array))
-										throw new ParseExpectValueException("解析Json失败.");
-									if(tmp == ']' && jsonContext.getJsonCharValueAtIndex(index+1)==0){
-										
-									}
-								}
-								
-							}
-							else if(valChar == '}'){
-								valueMap.put((String) parse(nameTmp.toString()).getValue(),parse(valueTmp.toString()));//解析之前缓存的值
-								value.setValue(valueMap);
-								return value;
-							}
-							valueTmp.append(valChar);
-							if(checkIndexIfOut(index+1, array))
-								throw new ParseExpectValueException("解析Json失败.");
-							jsonContext.setIndex(++index);
-						}	
+					jsonContext = parseWhiteSpace(jsonContext);
+					if(valueMap.containsKey(nameTmp.toString())){
+						throw new ParseExpectValueException("JSON Key:"+nameTmp+" 重复。");
 					}
 					else{
-						nameTmp.append(curChar);
+						valueMap.put(nameTmp.getValue(), parseValue(jsonContext));
+						parseWhiteSpace(jsonContext);
 						break;
 					}
 				case '}':
-					valueMap.put(nameTmp.toString(),parse(valueTmp.toString()));//解析之前缓存的值
 					value.setValue(valueMap);
-					return value;
-				default:
-					nameTmp.append(curChar);
-					break;
-					
+					if(checkIndexIfOut(index+1, array))
+						return value;
+					else{
+						jsonContext.setIndex(++index);
+						return value;
+					}
 			}
-			if(checkIndexIfOut(index+1, array))
-				throw new ParseExpectValueException("解析数组失败.");
-			jsonContext.setIndex(++index);
 		}
 	}
 
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public T parseValue(JsonContext jsonContext) throws JsonParseValueException{
+	public T parseValue(JSONContext jsonContext) throws JSONParseException{
 		// TODO Auto-generated method stub
 		int index = jsonContext.getIndex();
 		switch(jsonContext.getJsonCharValueAtIndex(index)){
@@ -491,12 +421,12 @@ public class SimpleValueParser<T extends AbstractJsonValue<?>> implements ValueP
 
 
 	@SuppressWarnings("unchecked")
-	public T parse(String jsonStr) throws JsonParseValueException {
+	public T parse(String jsonStr) throws JSONParseException {
 		// TODO Auto-generated method stub
 		if(jsonStr == null || jsonStr.isEmpty()){
 			throw new ParseRootNotSingularException("Json串空");
 		}
-		JsonContext jsonContext = new JsonContext(jsonStr);
+		JSONContext jsonContext = new JSONContext(jsonStr);
 		parseWhiteSpace(jsonContext);
 		AbstractJsonValue<?> v = parseValue(jsonContext);
 		if(jsonContext.getIndex() < (jsonContext.getJsonCharArray().length-1)){

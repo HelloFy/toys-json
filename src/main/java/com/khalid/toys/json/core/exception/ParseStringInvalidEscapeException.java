@@ -1,6 +1,6 @@
 package com.khalid.toys.json.core.exception;
 
-public class ParseStringInvalidEscapeException extends JsonParseValueException{
+public class ParseStringInvalidEscapeException extends JSONParseValueException{
 
 	/**
 	 * 

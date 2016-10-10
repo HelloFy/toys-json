@@ -2,7 +2,7 @@ package com.khalid.toys.json.core.parse;
 
 import org.junit.Assert;
 
-public class JsonContext {
+public class JSONContext {
 
 	private char[] jsonCharArray;
 	
@@ -10,7 +10,7 @@ public class JsonContext {
 	
 	private int index = 0;
 	
-	public JsonContext(String jsonStr){
+	public JSONContext(String jsonStr){
 		this.setJsonStr(jsonStr);
 		setJsonCharArray(jsonStr.toCharArray());
 	}

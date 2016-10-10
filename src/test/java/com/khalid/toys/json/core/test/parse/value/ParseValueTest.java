@@ -1,13 +1,11 @@
 package com.khalid.toys.json.core.test.parse.value;
 
-import java.lang.invoke.LambdaConversionException;
-
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.alibaba.fastjson.JSONObject;
-import com.khalid.toys.json.core.exception.JsonParseException;
-import com.khalid.toys.json.core.exception.JsonParseValueException;
+import com.khalid.toys.json.core.exception.JSONParseException;
+import com.khalid.toys.json.core.exception.JSONParseValueException;
 import com.khalid.toys.json.core.parse.SimpleValueParser;
 import com.khalid.toys.json.core.value.ArrayValue;
 import com.khalid.toys.json.core.value.BooleanValue;
@@ -22,7 +20,7 @@ public class ParseValueTest
     public void testParseNullValue(){
 		try {
 			Assert.assertEquals("value:null",new SimpleValueParser<NullValue>().parse("").toString());
-		} catch (JsonParseException e) {
+		} catch (JSONParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -32,13 +30,13 @@ public class ParseValueTest
     public void testParseBooleanValue(){
     	try {
 			Assert.assertEquals("value:true",new SimpleValueParser<BooleanValue>().parse(" true ").toString());
-		} catch (JsonParseException e) {
+		} catch (JSONParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		try {
 			Assert.assertEquals("value:false",new SimpleValueParser<BooleanValue>().parse(" false ").toString());
-		} catch (JsonParseException e) {
+		} catch (JSONParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -48,62 +46,62 @@ public class ParseValueTest
     public void testParseNumber(){
     	try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("1.0000000000000002"));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("4.9406564584124654e-324"));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("-4.9406564584124654e-324"));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("2.2250738585072009e-308"));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("-2.2250738585072009e-308"));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("2.2250738585072014e-308"));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("-2.2250738585072014e-308"));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("1.7976931348623157e+308"));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<NumberValue>().parse("-1.7976931348623157e+308"));
-		} catch (JsonParseException e) {
+		} catch (JSONParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -114,21 +112,21 @@ public class ParseValueTest
     public void parseString(){
 		try {
 			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\\u4e2d\n\" "));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\n32\"\""));
-		} catch (JsonParseException e1) {
+		} catch (JSONParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		try {
 			System.out.println(new SimpleValueParser<StringValue>().parse("\"232\tt\\\"\" "));
-		} catch (JsonParseException e) {
+		} catch (JSONParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -164,7 +162,7 @@ public class ParseValueTest
     	System.out.println(s);
     	try {
 			System.out.println(new SimpleValueParser<ArrayValue>().parse(s));
-		} catch (JsonParseException e) {
+		} catch (JSONParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -173,9 +171,9 @@ public class ParseValueTest
     @Test
     public void testParseObject(){
     	String s = "{\"name\":\"feiyeu\",\"value\":123,\"array\":[\"123123\",1.1,123]}";
-		try {
-			System.out.println(new SimpleValueParser<ObjectValue>().parse(s));
-		} catch (JsonParseValueException e) {
+    	try {
+			System.out.println(new SimpleValueParser<>().parse(s));
+		} catch (JSONParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
